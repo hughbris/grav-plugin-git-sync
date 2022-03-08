@@ -1,1 +1,5 @@
 enabled: true
+webhooks:
+  enabled: false
+  path: /_webhooks
+  # secret: 

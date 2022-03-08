@@ -88,44 +88,6 @@ class GitSyncPlugin extends Plugin
                 'onAdminAfterAddMedia' => ['onAdminAfterMedia', 0],
                 'onAdminAfterDelMedia' => ['onAdminAfterMedia', 0],
             ]);
-
-            return;
-        }
-
-        $config = $this->config->get('plugins.' . $this->name);
-        $route = $this->grav['uri']->route();
-        $webhook = $config['webhook'] ?? false;
-        $secret = $config['webhook_secret'] ?? false;
-        $enabled = $config['webhook_enabled'] ?? false;
-
-        if ($route === $webhook && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            if ($secret && $enabled) {
-                if (!$this->isRequestAuthorized($secret)) {
-                    http_response_code(401);
-                    header('Content-Type: application/json');
-                    echo json_encode([
-                        'status' => 'error',
-                        'message' => 'Unauthorized request'
-                    ]);
-                    exit;
-                }
-            }
-            try {
-                $this->synchronize();
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'GitSync completed the synchronization'
-                ]);
-            } catch (\Exception $e) {
-                http_response_code(500);
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'GitSync failed to synchronize'
-                ]);
-            }
-            exit;
         }
     }
 
@@ -330,12 +292,54 @@ class GitSyncPlugin extends Plugin
         return true;
     }
 
-    public function onPageInitialized()
-    {
-        if ($this->controller && $this->controller->isActive()) {
-            $this->controller->execute();
-            $this->controller->redirect();
+    public function onPageInitialized() {
+
+        $webhooks = $this->config->get("plugins.{$this->name}.webhooks");
+        if (!($webhooks['enabled'] ?? FALSE)) {
+            return;
         }
+        $page = $this->grav['page'] ?? NULL; // CHECKME: may not need this
+        // dump($this->grav['uri']->uri(), is_null($page->route())); return;
+
+        if (/* is_null($page->route()) && */ $this->grav['uri']->uri() == $webhooks['path']) { // TODO: just check for uri starting with path here
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                header('Content-Type: application/json');
+                if ($webhooks['secret'] ?? false) {
+                    if (!$this->isRequestAuthorized($webhooks['secret'])) {
+                        http_response_code(401);
+                        // TODO: 'WWW-Authenticate' header here??
+                        echo json_encode([
+                            'status' => 'error',
+                            'message' => 'Unauthorized request',
+                        ]);
+                        exit;
+                    }
+                }
+
+                // TODO: branch/tag and other condition filtering here - respond with 202 and a "void" status or something (possibly even https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/204 ??)
+
+                // TODO: possibly branch into other hooks here, not just /pull
+                try {
+                    # $this->synchronize();
+                    http_response_code(202);
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'GitSync completed the synchronization',
+                    ]);
+                } catch (\Exception $e) {
+                    http_response_code(500);
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'GitSync failed to synchronize',
+                    ]);
+                }
+            }
+            else {
+                http_response_code(405);
+            }
+            exit;
+        }
+
     }
 
     /**
