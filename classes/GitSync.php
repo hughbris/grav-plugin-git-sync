@@ -365,15 +365,8 @@ class GitSync extends Git
     public function hasChangesToCommit()
     {
         $folders = $this->config['folders'];
-        $paths = [];
-
-        foreach ($folders as $folder) {
-            $folder = explode('/', $folder);
-            $paths[] = array_shift($folder);
-        }
-
         $message = 'nothing to commit';
-        $output = $this->execute('status ' . implode(' ', $paths));
+        $output = $this->execute('status ' . implode(' ', $this->config['folders']));
 
         return strpos($output[count($output) - 1], $message) !== 0;
     }

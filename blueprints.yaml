@@ -37,7 +37,7 @@ form:
       validate:
         type: bool
 
-    folders:
+    folders: # FIXME: allow or make sure sub-paths are supported
       type: select
       multiple: true
       label: Folders to Sync
