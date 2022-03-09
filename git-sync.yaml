@@ -1,5 +1,9 @@
 enabled: true
+folders:
+  - pages
 webhooks:
   enabled: false
   path: /_webhooks
   # secret: 
+logging: true
+password: null

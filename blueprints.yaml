@@ -56,110 +56,18 @@ form:
       validate:
         type: commalist
 
-    Sync:
-      type: section
-      title: Automatic Synchronization Settings
-      underline: true
-
-    SyncNotice:
-      type: hidden
-      markdown: true
-      text: |
-        ! To improve the speed of saving pages you can disable automatic sync. Then, changes to a page will not be sent to the remote repository on every save. To sync your changes to the repository tap the GitSync button (<i class="fa fa-git"></i>) in the top left of the Administration Panel, or use the below Scheduler option to add the GitSync Syncronization Job to the Scheduler (<strong>Grav 1.6 required</strong>).
-
-    sync.on_save:
-      type: toggle
-      label: Sync on Page Save
-      help: Sync with the remote directory when a page is saved through the admin
-      default: 1
-      highlight: 1
-      options:
-        1: PLUGIN_ADMIN.YES
-        0: PLUGIN_ADMIN.NO
-      validate:
-        type: bool
-
-    sync.on_delete:
-      type: toggle
-      label: Sync on Page Delete
-      help: Sync with the remote directory when a page is deleted through the admin
-      default: 1
-      highlight: 1
-      options:
-        1: PLUGIN_ADMIN.YES
-        0: PLUGIN_ADMIN.NO
-      validate:
-        type: bool
-
-    sync.on_media:
-      type: toggle
-      label: Sync on Media Changes
-      help: Sync with the remote directory when a media is uploaded or deleted through the admin immediately (instead of only syncing when the page is saved)
-      default: 1
-      highlight: 1
-      options:
-        1: PLUGIN_ADMIN.YES
-        0: PLUGIN_ADMIN.NO
-      validate:
-        type: bool
-
-    sync.cron_enable:
-      type: toggle
-      label: Add Sync to Scheduler
-      help: Add GitSync Job to the Scheduler so it can automatically perform synchronization at the given time
-      default: 0
-      highlight: 1
-      options:
-        1: PLUGIN_ADMIN.YES
-        0: PLUGIN_ADMIN.NO
-      validate:
-        type: bool
-
-    sync.cron_at:
-      type: cron
-      label: Run Sync at
-      help: When should the Scheduler run the automatic GitSync synchronization job
-      default: '0 12,23 * * *'
-
     Repo:
       type: section
       title: Git Repository Settings
       underline: true
 
-    local_repository:
-      type: hidden
-      multiple: false
-      size: medium
-      label: Local Repository Path
-
-    repository:
+    branch: # not sure if there will be a use for specifying a branch, probably will not be for the same purpose as the original plugin
       type: text
-      label: Git Repository
-      placeholder: https://github.com/user/repository.git
+      default: master
+      label: Local Branch
+      placeholder: master
 
-    no_user:
-      type: toggle
-      label: User not required
-      highlight: 0
-      default: 0
-      options:
-        1: Enabled
-        0: Disabled
-      description: With this setting enabled, the user can be left blank and it will be ignored from the authentication. Useful when only needing access tokens `token@host` rather than `user:password@host`
-
-    user:
-      type: text
-      label: Git User
-      placeholder: Username, not email
-      autocomplete: off
-
-    password:
-      type: enc-password
-      label: Git Password or Token
-      placeholder: Your Git Password or Token
-      description: Enter your password or token to encrypt and securely store it, then save the settings. It will not show up here for security reasons.
-      autocomplete: off
-
+    # FIXME: needs restructuring, see yaml
     webhook:
       type: text
       label: Repository Web Hook URL
@@ -217,6 +125,7 @@ form:
         gravuser: Use Grav User Name
         gravfull: Use Grav User Full Name
 
+    # I'd like to make this just a default message and allow editors to set
     git.message:
       type: text
       default: (Grav GitSync) Automatic Commit
@@ -243,23 +152,12 @@ form:
       help: If the default `git` command doesn't work on your machine or if you want to specify a custom path, do it in here
       placeholder: /usr/bin/git
 
-    git.ignore:
-      type: textarea
-      label: Git Ignore
-      help: Add custom git ignore rules to go along with GitSync. One per line
-      rows: 6
-      placeholder: |
-        node_modules
-        /.idea
-
     git.private_key:
       type: text
       label: Private SSH Key
       placeholder: ~/.ssh/id_rsa
       markdown: true
       description: >
-        In order to be able to sparse-checkout and push changes, it is expected you have an ssh-key configured for accessing the repository. This is usually found under `~/.ssh` and it needs to be configured for the same user that runs the web-server. <br />
-        <br />
         Point it to the secret (not the public) and make also sure you have strict permissions to the file. (`-rw-------`). <br />
         <br />
         Example: `private_key: /home/www-data/.ssh/id_rsa`<br />
@@ -277,13 +175,3 @@ form:
         0: PLUGIN_ADMIN.NO
       validate:
         type: bool
-
-    Actions:
-      type: section
-      title: Actions
-      underline: true
-
-    _wizard:
-      type: git-wizard
-      label: Text Variable
-      help: Text to add to the top of a page
