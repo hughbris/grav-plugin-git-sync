@@ -326,7 +326,9 @@ class GitSyncPlugin extends Plugin
      */
     public function stageChanges() {
         $filesToStage = GitSync::listFiles($this->git->statusUnstaged());
+        $this->grav->fireEvent('onGitSyncBeforeStage');
         $this->git->stageFiles($filesToStage);
+        $this->grav->fireEvent('onGitSyncAfterStage');
     }
 
     /**
