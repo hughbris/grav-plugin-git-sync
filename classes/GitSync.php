@@ -31,16 +31,15 @@ class GitSync extends Git
     {
         $this->grav = Grav::instance();
         $this->config = $this->grav['config']->get('plugins.git-sync');
-        $this->repositoryPath = isset($this->config['local_repository']) && $this->config['local_repository'] ? $this->config['local_repository'] : USER_DIR;
+        $this->repositoryPath = USER_DIR;
 
         parent::__construct($this->repositoryPath);
 
         static::$instance = $this;
 
-        $this->user = isset($this->config['no_user']) && $this->config['no_user'] ? '' : ($this->config['user'] ?? null);
-        $this->password = $this->config['password'] ?? null;
+        $this->user = null;
+        $this->password = null;
 
-        unset($this->config['user'], $this->config['password']);
     }
 
     /**
@@ -111,6 +110,7 @@ class GitSync extends Git
      */
     public function initializeRepository()
     {
+        return; // probably wanna skip this
         if (!Helper::isGitInitialized()) {
             $branch = $this->getRemote('branch', null);
             $local_branch = $this->getConfig('branch', $branch);
@@ -142,32 +142,6 @@ class GitSync extends Git
             $this->execute('config core.sshCommand "ssh -i ' . $privateKey . ' -F /dev/null"');
         } else {
             $this->execute('config --unset core.sshCommand');
-        }
-
-        return true;
-    }
-
-    /**
-     * @param string|null $name
-     * @return bool
-     */
-    public function hasRemote($name = null)
-    {
-        $name = $this->getRemote('name', $name);
-
-        try {
-            /** @var string $version */
-            $version = Helper::isGitInstalled(true);
-            // remote get-url 'name' supported from 2.7.0 and above
-            if (version_compare($version, '2.7.0', '>=')) {
-                $command = "remote get-url \"{$name}\"";
-            } else {
-                $command = "config --get remote.{$name}.url";
-            }
-
-            $this->execute($command);
-        } catch (\Exception $e) {
-            return false;
         }
 
         return true;
@@ -216,28 +190,6 @@ class GitSync extends Git
         $file = File::instance(rtrim($this->repositoryPath, '/') . '/.gitignore');
         $file->save(implode("\r\n", $ignore));
         $file->free();
-    }
-
-    /**
-     * @param string|null $alias
-     * @param string|null $url
-     * @param bool $authenticated
-     * @return string[]
-     */
-    public function addRemote($alias = null, $url = null, $authenticated = false)
-    {
-        $alias = $this->getRemote('name', $alias);
-        $url = $this->getConfig('repository', $url);
-
-        if ($authenticated) {
-            $user = $this->user ?? '';
-            $password = $this->password ? Helper::decrypt($this->password) : '';
-            $url = Helper::prepareRepository($user, $password, $url);
-        }
-
-        $command = $this->hasRemote($alias) ? 'set-url' : 'add';
-
-        return $this->execute("remote {$command} {$alias} \"{$url}\"");
     }
 
     /**
@@ -382,6 +334,7 @@ class GitSync extends Git
      */
     public function sync($name = null, $branch = null)
     {
+        return; // best not to go and sync
         $name = $this->getRemote('name', $name);
         $branch = $this->getRemote('branch', $branch);
         $this->addRemote(null, null, true);
@@ -393,14 +346,6 @@ class GitSync extends Git
         $this->addRemote();
 
         return true;
-    }
-
-    /**
-     * @return string[]
-     */
-    public function reset()
-    {
-        return $this->execute('reset --hard HEAD');
     }
 
     /**

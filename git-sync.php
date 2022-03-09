@@ -179,14 +179,21 @@ class GitSyncPlugin extends Plugin
 
     public function init()
     {
-        /*
-        if ($this->isAdmin()) {
-            $this->controller = new AdminController($this);
-            $this->git = &$this->controller->git;
-        } else {
-        */
-            $this->git = new GitSync();
+        $this->git = new GitSync();
+    }
+
+    /**
+     * @return bool
+     */
+    {
+        if (!Helper::isGitInstalled() || !Helper::isGitInitialized()) {
+            return true;
         }
+
+
+
+
+        return true;
     }
 
     /**
@@ -215,24 +222,7 @@ class GitSyncPlugin extends Plugin
         return true;
     }
 
-    /**
-     * @return bool
-     */
-    public function reset()
-    {
-        if (!Helper::isGitInstalled() || !Helper::isGitInitialized()) {
-            return true;
-        }
-
-        $this->grav->fireEvent('onGitSyncBeforeReset');
-
-        $this->git->reset();
-
-        $this->grav->fireEvent('onGitSyncAfterReset');
-
-        return true;
-    }
-
+    // Not sure I will need this...
     /**
      * Add current directory to twig lookup paths.
      */
@@ -349,27 +339,6 @@ class GitSyncPlugin extends Plugin
         if ($action === 'gitsync') {
             $this->synchronize();
         }
-    }
-
-    /**
-     * @param string $data_type
-     * @return string|null
-     */
-    public function getFolderMapping($data_type)
-    {
-        switch ($data_type) {
-            case 'user':
-                return 'accounts';
-            case 'themes':
-                return 'config';
-            case 'config':
-            case 'data':
-            case 'plugins':
-            case 'pages':
-                return $data_type;
-        }
-
-        return null;
     }
 
     /**
