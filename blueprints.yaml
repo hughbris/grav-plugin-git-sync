@@ -97,24 +97,7 @@ form:
       title: Advanced Git Settings
       underline: true
 
-    branch:
-      type: text
-      default: master
-      label: Local Branch
-      placeholder: master
-
-    remote.name:
-      type: text
-      default: origin
-      label: Remote Name
-      placeholder: origin
-
-    remote.branch:
-      type: text
-      default: master
-      label: Remote Branch
-      placeholder: master
-
+    # probably wanna fix this or just grab git.name and git.email below
     git.author:
       type: select
       default: gituser
