@@ -33,12 +33,10 @@ class GitSyncPlugin extends Plugin
     {
         return [
             'onPluginsInitialized'   => [
-                ['autoload', 100000],
                 ['onPluginsInitialized', 1000]
             ],
             'onPageInitialized'      => ['onPageInitialized', 0],
-            # 'onFormProcessed'        => ['onFormProcessed', 0],
-            # 'onSchedulerInitialized' => ['onSchedulerInitialized', 0]
+            # 'onFormProcessed'        => ['onFormProcessed', 0], // doubt I have a use for this
         ];
     }
 
@@ -73,7 +71,6 @@ class GitSyncPlugin extends Plugin
      */
     public function onPluginsInitialized()
     {
-        # $this->enable(['gitsync' => ['synchronize', 0]]);
         $this->init();
 
         if ($this->isAdmin()) {
@@ -81,12 +78,12 @@ class GitSyncPlugin extends Plugin
                 'onTwigTemplatePaths'  => ['onTwigTemplatePaths', 0],
                 'onTwigSiteVariables'  => ['onTwigSiteVariables', 0],
                 'onAdminMenu'          => ['onAdminMenu', 0],
-                # 'onAdminSave'          => ['checkStuff', 0],
+                # 'onAdminSave'          => ['checkStuff', 0], // maybe suppress unnecessary re-numbering by the Admin plugin here
                 'onAdminAfterSave'     => ['stageChanges', 0],
-                # 'onAdminAfterSaveAs'   => ['onAdminAfterSaveAs', 0],
-                # 'onAdminAfterDelete'   => ['onAdminAfterDelete', 0],
-                # 'onAdminAfterAddMedia' => ['onAdminAfterMedia', 0],
-                # 'onAdminAfterDelMedia' => ['onAdminAfterMedia', 0],
+                # 'onAdminAfterSaveAs'   => ['onAdminAfterSaveAs', 0], // I don't properly understand this event
+                'onAdminAfterDelete'   => ['stageChanges', 0], // it's safest not to try selecting only unstaged deletions, since renames may get caught up in that
+                'onAdminAfterAddMedia' => ['stageChanges', 0], // see onAdminAfterDelete above
+                'onAdminAfterDelMedia' => ['stageChanges', 0], // see onAdminAfterDelete above
             ]);
         }
     }
@@ -218,20 +215,6 @@ class GitSyncPlugin extends Plugin
         return true;
     }
 
-    public function onSchedulerInitialized(Event $event)
-    {
-        /** @var Config $config */
-        $config = Grav::instance()['config'];
-        $run_at = $config->get('plugins.git-sync.sync.cron_at', '0 12,23 * * *');
-
-        if ($config->get('plugins.git-sync.sync.cron_enable', false)) {
-            /** @var Scheduler $scheduler */
-            $scheduler = $event['scheduler'];
-            $job = $scheduler->addFunction('Grav\Plugin\GitSync\Helper::synchronize', [], 'GitSync');
-            $job->at($run_at);
-        }
-    }
-
     /**
      * @return bool
      */
@@ -347,40 +330,6 @@ class GitSyncPlugin extends Plugin
     }
 
     /**
-     * @param Event $event
-     * @return Data|true
-     */
-    public function onAdminSave(Event $event)
-    {
-        $obj           = $event['object'];
-        $adminPath 	   = trim($this->grav['admin']->base, '/');
-        $isPluginRoute = $this->grav['uri']->path() === "/$adminPath/plugins/" . $this->name;
-
-        if ($obj instanceof Data) {
-            if (!$isPluginRoute || !Helper::isGitInstalled()) {
-                return true;
-            }
-
-            // empty password, keep current one or encrypt if haven't already
-            $password = $obj->get('password', false);
-            if (!$password) { // set to !()
-                $current_password = $this->git->getPassword();
-                // password exists but was never encrypted
-                if ($current_password && strpos($current_password, 'gitsync-') !== 0) {
-                    $current_password = Helper::encrypt($current_password);
-                }
-            } else {
-                // password is getting changed
-                $current_password = Helper::encrypt($password);
-            }
-
-            $obj->set('password', $current_password);
-        }
-
-        return $obj;
-    }
-
-    /**
      * Stage changes and untracked files to the working tree in the selected paths
      *
      * @return void
@@ -388,69 +337,6 @@ class GitSyncPlugin extends Plugin
     public function stageChanges() {
         $filesToStage = GitSync::listFiles($this->git->statusUnstaged());
         $this->git->stageFiles($filesToStage);
-    }
-
-    /**
-     * @param Event $event
-     */
-    public function onAdminAfterSave(Event $event)
-    {
-        $obj           = $event['object'];
-        $adminPath	   = trim($this->grav['admin']->base, '/');
-        $uriPath       = $this->grav['uri']->path();
-        $isPluginRoute = $uriPath === "/$adminPath/plugins/" . $this->name;
-
-        if ($obj instanceof PageInterface && !$this->grav['config']->get('plugins.git-sync.sync.on_save', true)) {
-            return;
-        }
-
-        if ($obj instanceof Data) {
-            $folders = $this->git->getConfig('folders', $event['object']->get('folders', []));
-            $data_type = preg_replace('#^/' . preg_quote($adminPath, '#') . '/#', '', $uriPath);
-            $data_type = explode('/', $data_type);
-            $data_type = array_shift($data_type);
-
-            if (null === $data_type || !Helper::isGitInstalled() || (!$isPluginRoute && !in_array($this->getFolderMapping($data_type), $folders, true))) {
-                return;
-            }
-
-            if ($isPluginRoute) {
-                $this->git->setConfig($obj->toArray());
-
-                // initialize git if not done yet
-                $this->git->initializeRepository();
-
-                // set committer and remote data
-                $this->git->setUser();
-                $this->git->addRemote();
-            }
-        }
-
-        $this->synchronize();
-    }
-
-    public function onAdminAfterSaveAs()
-    {
-        if ($this->grav['config']->get('plugins.git-sync.sync.on_save', true))
-        {
-            $this->synchronize();
-        }
-    }
-
-    public function onAdminAfterDelete()
-    {
-        if ($this->grav['config']->get('plugins.git-sync.sync.on_delete', true))
-        {
-            $this->synchronize();
-        }
-    }
-
-    public function onAdminAfterMedia()
-    {
-        if ($this->grav['config']->get('plugins.git-sync.sync.on_media', true))
-        {
-            $this->synchronize();
-        }
     }
 
     /**
