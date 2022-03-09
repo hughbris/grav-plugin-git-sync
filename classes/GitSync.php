@@ -434,6 +434,79 @@ class GitSync extends Git
     }
 
     /**
+     * @return array
+     */
+    private function statusLines($filter=TRUE) {
+        $command = 'status --find-renames --porcelain';
+        if ($filter) {
+            $command .= ' ' . implode(' ', $this->config['folders']);
+        }
+        return $this->execute($command);
+    }
+
+    /**
+     * @return string
+     */
+    public static function listFiles($statusListing) {
+        return implode(' ', array_column($statusListing, 'path'));
+    }
+
+    /**
+     * @return array
+     */
+    public function statusParsed($filter=TRUE)
+    {
+        $changes = $this->statusLines($filter);
+        $ret = [];
+
+        foreach ($changes as $change) {
+            $members = [
+                'working' => substr($change, 1, 1),
+                'index' => substr($change, 0, 1),
+                ];
+            $paths = explode(' -> ', substr($change, 3));
+            $members['path'] = array_shift($paths);
+            if (!empty($paths)) {
+                $members['orig_path'] = array_shift($paths);
+            }
+
+            array_push($ret, $members);
+        }
+        return $ret;
+    }
+
+    /**
+     * @return array
+     */
+    public function statusUnstaged($filter=TRUE) {
+        return $this->statusSelect($filter);
+    }
+
+    /**
+     * @return array
+     */
+    public function statusSelect($path_filter=TRUE, $env='working', $select='MTDRC?A') {
+        $status = $this->statusParsed($path_filter);
+        return array_values(array_filter($status, function($v) use ($env, $select) {
+            return in_array($v[$env], str_split($select));
+            }));
+    }
+
+    /**
+     * @return void
+     */
+    public function stageFiles($statusListing=NULL) {
+        if (is_null($statusListing)) {
+            $files = '.';
+        }
+        else {
+            $files = self::listFiles($this->statusUnstaged());
+        }
+        $command = 'add --all';
+        $this->execute("$command $files");
+    }
+
+    /**
      * @param string $command
      * @param bool $quiet
      * @return string[]

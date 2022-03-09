@@ -82,7 +82,7 @@ class GitSyncPlugin extends Plugin
                 'onTwigSiteVariables'  => ['onTwigSiteVariables', 0],
                 'onAdminMenu'          => ['onAdminMenu', 0],
                 # 'onAdminSave'          => ['checkStuff', 0],
-                # 'onAdminAfterSave'     => ['stageChanges', 0],
+                'onAdminAfterSave'     => ['stageChanges', 0],
                 # 'onAdminAfterSaveAs'   => ['onAdminAfterSaveAs', 0],
                 # 'onAdminAfterDelete'   => ['onAdminAfterDelete', 0],
                 # 'onAdminAfterAddMedia' => ['onAdminAfterMedia', 0],
@@ -378,6 +378,16 @@ class GitSyncPlugin extends Plugin
         }
 
         return $obj;
+    }
+
+    /**
+     * Stage changes and untracked files to the working tree in the selected paths
+     *
+     * @return void
+     */
+    public function stageChanges() {
+        $filesToStage = GitSync::listFiles($this->git->statusUnstaged());
+        $this->git->stageFiles($filesToStage);
     }
 
     /**
