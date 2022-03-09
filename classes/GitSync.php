@@ -56,29 +56,11 @@ class GitSync extends Git
     }
 
     /**
-     * @return string|null
-     */
-    public function getUser()
-    {
-        return $this->user;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getPassword()
-    {
-        return $this->password;
-    }
-
-    /**
      * @param array $config
      */
     public function setConfig($config)
     {
         $this->config = $config;
-        $this->user = $this->config['user'];
-        $this->password = $this->config['password'];
     }
 
     /**
@@ -146,8 +128,9 @@ class GitSync extends Git
      * @param string|null $email
      * @return bool
      */
-    public function setUser($name = null, $email = null)
+    public function setUser($name = null, $email = null) // NEUTERED
     {
+        return; // NEVER DO THIS
         $name = $this->getConfig('git', $name)['name'];
         $email = $this->getConfig('git', $email)['email'];
         $privateKey = $this->getGitConfig('private_key', null);
@@ -190,8 +173,9 @@ class GitSync extends Git
         return true;
     }
 
-    public function enableSparseCheckout()
+    public function enableSparseCheckout() // NEUTERED
     {
+        return; // DON'T THINK I WILL NEED THIS
         $folders = $this->config['folders'];
         $this->execute('config core.sparsecheckout true');
 

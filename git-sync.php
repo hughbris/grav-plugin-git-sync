@@ -37,8 +37,8 @@ class GitSyncPlugin extends Plugin
                 ['onPluginsInitialized', 1000]
             ],
             'onPageInitialized'      => ['onPageInitialized', 0],
-            'onFormProcessed'        => ['onFormProcessed', 0],
-            'onSchedulerInitialized' => ['onSchedulerInitialized', 0]
+            # 'onFormProcessed'        => ['onFormProcessed', 0],
+            # 'onSchedulerInitialized' => ['onSchedulerInitialized', 0]
         ];
     }
 
@@ -73,7 +73,7 @@ class GitSyncPlugin extends Plugin
      */
     public function onPluginsInitialized()
     {
-        $this->enable(['gitsync' => ['synchronize', 0]]);
+        # $this->enable(['gitsync' => ['synchronize', 0]]);
         $this->init();
 
         if ($this->isAdmin()) {
@@ -81,12 +81,12 @@ class GitSyncPlugin extends Plugin
                 'onTwigTemplatePaths'  => ['onTwigTemplatePaths', 0],
                 'onTwigSiteVariables'  => ['onTwigSiteVariables', 0],
                 'onAdminMenu'          => ['onAdminMenu', 0],
-                'onAdminSave'          => ['onAdminSave', 0],
-                'onAdminAfterSave'     => ['onAdminAfterSave', 0],
-                'onAdminAfterSaveAs'   => ['onAdminAfterSaveAs', 0],
-                'onAdminAfterDelete'   => ['onAdminAfterDelete', 0],
-                'onAdminAfterAddMedia' => ['onAdminAfterMedia', 0],
-                'onAdminAfterDelMedia' => ['onAdminAfterMedia', 0],
+                # 'onAdminSave'          => ['checkStuff', 0],
+                # 'onAdminAfterSave'     => ['stageChanges', 0],
+                # 'onAdminAfterSaveAs'   => ['onAdminAfterSaveAs', 0],
+                # 'onAdminAfterDelete'   => ['onAdminAfterDelete', 0],
+                # 'onAdminAfterAddMedia' => ['onAdminAfterMedia', 0],
+                # 'onAdminAfterDelMedia' => ['onAdminAfterMedia', 0],
             ]);
         }
     }
@@ -182,11 +182,12 @@ class GitSyncPlugin extends Plugin
 
     public function init()
     {
+        /*
         if ($this->isAdmin()) {
-            /** @var AdminController controller */
             $this->controller = new AdminController($this);
             $this->git = &$this->controller->git;
         } else {
+        */
             $this->git = new GitSync();
         }
     }
@@ -196,10 +197,12 @@ class GitSyncPlugin extends Plugin
      */
     public function synchronize()
     {
+        $this->grav['debugger']->addMessage('GitSyncPlugin->synchronize() was called but has not happened!');
         if (!Helper::isGitInstalled() || !Helper::isGitInitialized()) {
             return true;
         }
 
+        /*
         $this->grav->fireEvent('onGitSyncBeforeSynchronize');
 
         if ($this->git->hasChangesToCommit()) {
@@ -210,6 +213,7 @@ class GitSyncPlugin extends Plugin
         $this->git->sync();
 
         $this->grav->fireEvent('onGitSyncAfterSynchronize');
+        */
 
         return true;
     }
