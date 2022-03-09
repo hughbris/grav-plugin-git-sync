@@ -107,6 +107,7 @@ class AdminController extends AdminBaseController
 
     public function taskResetLocal()
     {
+        return; // let's never do this
         try {
             $this->plugin->reset();
             echo json_encode([
