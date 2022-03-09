@@ -185,20 +185,6 @@ class GitSyncPlugin extends Plugin
     /**
      * @return bool
      */
-    {
-        if (!Helper::isGitInstalled() || !Helper::isGitInitialized()) {
-            return true;
-        }
-
-
-
-
-        return true;
-    }
-
-    /**
-     * @return bool
-     */
     public function synchronize()
     {
         $this->grav['debugger']->addMessage('GitSyncPlugin->synchronize() was called but has not happened!');
