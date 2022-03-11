@@ -77,6 +77,7 @@ class GitSyncPlugin extends Plugin
 
         if ($this->isAdmin()) {
             $this->enable([
+                'onPageInitialized'    => ['showPublishingForm', 0],
                 'onTwigTemplatePaths'  => ['onTwigTemplatePaths', 0],
                 'onTwigSiteVariables'  => ['onTwigSiteVariables', 0],
                 'onAdminMenu'          => ['showPublishingMenu', 0],
@@ -154,6 +155,10 @@ class GitSyncPlugin extends Plugin
         }
 
         return false;
+    }
+
+    public function showPublishingForm() { // FIXME: stub
+        return;
     }
 
     public function showPublishingMenu() {
