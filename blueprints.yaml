@@ -3,7 +3,7 @@ type: plugin
 slug: git-sync
 version: 2.3.2
 description: Allows to synchronize portions of Grav with Git Repositories (GitHub, BitBucket, GitLab)
-icon: git
+icon: bolt # hand-o-right hand-o-up
 author:
   name: Trilby Media, LLC
   email: hello@trilby.media

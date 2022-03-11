@@ -21,6 +21,8 @@ use RocketTheme\Toolbox\Event\Event;
  */
 class GitSyncPlugin extends Plugin
 {
+    protected $route = 'publish'; // FIXME: this does not route yet
+
     /** @var AdminController|null */
     protected $controller;
     /** @var GitSync */
@@ -77,7 +79,7 @@ class GitSyncPlugin extends Plugin
             $this->enable([
                 'onTwigTemplatePaths'  => ['onTwigTemplatePaths', 0],
                 'onTwigSiteVariables'  => ['onTwigSiteVariables', 0],
-                'onAdminMenu'          => ['onAdminMenu', 0],
+                'onAdminMenu'          => ['showPublishingMenu', 0],
                 # 'onAdminSave'          => ['checkStuff', 0], // maybe suppress unnecessary re-numbering by the Admin plugin here
                 'onAdminAfterSave'     => ['stageChanges', 0],
                 # 'onAdminAfterSaveAs'   => ['onAdminAfterSaveAs', 0], // I don't properly understand this event
@@ -154,26 +156,27 @@ class GitSyncPlugin extends Plugin
         return false;
     }
 
-    public function onAdminMenu()
-    {
+    public function showPublishingMenu() {
         $base = rtrim($this->grav['base_url'], '/') . '/' . trim($this->grav['admin']->base, '/');
+        $isInitialized = Helper::isGitInitialized();
+        $menuLabel = $isInitialized ? 'Publish' : 'Publishing';
         $options = [
-            'hint' => Helper::isGitInitialized() ? 'Synchronize GitSync' : 'Configure GitSync',
+            # 'hint' => $isInitialized ? 'Publish' : 'Publication',
             'class' => 'gitsync-sync',
             'location' => 'pages',
-            'route' => Helper::isGitInitialized() ? 'admin' : 'admin/plugins/git-sync',
-            'icon' => 'fa-' . $this->grav['plugins']->get('git-sync')->blueprints()->get('icon')
+            'route' => $isInitialized ? $this->route : 'plugins/git-sync',
+            'icon' => 'fa-' . ($isInitialized ? $this->grav['plugins']->get('git-sync')->blueprints()->get('icon') : 'cog'),
         ];
 
         if (Helper::isGitInstalled()) {
-            if (Helper::isGitInitialized()) {
-                $options['data'] = [
-                    'gitsync-useraction' => 'sync',
-                    'gitsync-uri' => $base . '/plugins/git-sync'
-                ];
+            if ($isInitialized) {
+                # $options['data'] = [
+                #     'gitsync-useraction' => 'commit',
+                #     'gitsync-uri' => $base . '/plugins/git-sync',
+                # ];
             }
 
-            $this->grav['twig']->plugins_quick_tray['GitSync'] = $options;
+            $this->grav['twig']->plugins_hooked_nav[$menuLabel] = $options; // TODO: make this configurable in YAML/blueprint
         }
     }
 
