@@ -38,7 +38,7 @@ class GitSyncPlugin extends Plugin
             'onPluginsInitialized'   => [
                 ['onPluginsInitialized', 1000]
             ],
-            'onPageInitialized'      => ['onPageInitialized', 0],
+            'onPageInitialized'      => ['serveHooks', 0],
             # 'onFormProcessed'        => ['onFormProcessed', 0], // doubt I have a use for this
         ];
     }
@@ -293,7 +293,7 @@ class GitSyncPlugin extends Plugin
         return true;
     }
 
-    public function onPageInitialized() {
+    public function serveHooks() {
 
         $webhooks = $this->config->get("plugins.{$this->name}.webhooks");
         if (!($webhooks['enabled'] ?? FALSE)) {
