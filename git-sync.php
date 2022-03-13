@@ -167,32 +167,23 @@ class GitSyncPlugin extends Plugin
         $event['paths'] = $paths;
     }
 
-    public function showPublishingForm($event) { // FIXME: stub
-        $page = $event['page'] ?? null;
+    public function showPublishingForm($event) { // TODO: stub
+        $publish_route = $this->config->get('plugins.admin.route') . '/' . $this->publish_route;
 
-        $route = $this->config->get('plugins.admin.route') . '/' . $this->publish_route;
-
-        if (is_null($page) || $page->route() !== $route) {
-        }
         $uri = $this->grav['uri'];
+        if (strpos($publish_route, $uri->path()) === false) {
+            return;
+        }
 
         $pages = $this->grav['pages'];
-        $page = $pages->dispatch($route);
+        $page = $pages->dispatch($publish_route);
 
         if (!$page) {
             // Only add page if it hasn't already been defined.
             $page = new Page;
             $page->init(new \SplFileInfo(__DIR__ . "/admin/pages/publish.md"));
-            // dump($page);
-            $page->slug(basename($route));
-
-            $pages->addPage($page, $route);
-        }
-
-        // dump($route, $uri->path());
-        if (strpos($route, $uri->path()) === false) {
-            // dump($route, $uri->path(), __DIR__);
-            return;
+            $page->slug(basename($publish_route));
+            $pages->addPage($page, $publish_route);
         }
 
         $twig = $this->grav['twig'];
