@@ -6,6 +6,7 @@ use Composer\Autoload\ClassLoader;
 use Grav\Common\Config\Config;
 use Grav\Common\Data\Data;
 use Grav\Common\Grav;
+use Grav\Common\Page\Page;
 use Grav\Common\Page\Interfaces\PageInterface;
 use Grav\Common\Plugin;
 use Grav\Common\Scheduler\Scheduler;
@@ -21,7 +22,7 @@ use RocketTheme\Toolbox\Event\Event;
  */
 class GitSyncPlugin extends Plugin
 {
-    protected $route = 'publish'; // FIXME: this does not route yet
+    protected $publish_route = 'publish'; // FIXME: this does not route yet
 
     /** @var AdminController|null */
     protected $controller;
@@ -77,8 +78,8 @@ class GitSyncPlugin extends Plugin
 
         if ($this->isAdmin()) {
             $this->enable([
-                'onPageInitialized'    => ['showPublishingForm', 0],
-                'onTwigTemplatePaths'  => ['onTwigTemplatePaths', 0],
+                'onAdminPage'   => ['showPublishingForm', 0],
+                'onAdminTwigTemplatePaths'  => ['onAdminTwigTemplatePaths', 0],
                 'onTwigSiteVariables'  => ['onTwigSiteVariables', 0],
                 'onAdminMenu'          => ['showPublishingMenu', 0],
                 # 'onAdminSave'          => ['checkStuff', 0], // maybe suppress unnecessary re-numbering by the Admin plugin here
@@ -157,8 +158,45 @@ class GitSyncPlugin extends Plugin
         return false;
     }
 
-    public function showPublishingForm() { // FIXME: stub
-        return;
+    /**
+     * Get admin page template
+     */
+    public function onAdminTwigTemplatePaths(Event $event) {
+        $paths = $event['paths'];
+        $paths[] = __DIR__ . DS . 'admin/templates';
+        $event['paths'] = $paths;
+    }
+
+    public function showPublishingForm($event) { // FIXME: stub
+        $page = $event['page'] ?? null;
+
+        $route = $this->config->get('plugins.admin.route') . '/' . $this->publish_route;
+
+        if (is_null($page) || $page->route() !== $route) {
+        }
+        $uri = $this->grav['uri'];
+
+        $pages = $this->grav['pages'];
+        $page = $pages->dispatch($route);
+
+        if (!$page) {
+            // Only add page if it hasn't already been defined.
+            $page = new Page;
+            $page->init(new \SplFileInfo(__DIR__ . "/admin/pages/publish.md"));
+            // dump($page);
+            $page->slug(basename($route));
+
+            $pages->addPage($page, $route);
+        }
+
+        // dump($route, $uri->path());
+        if (strpos($route, $uri->path()) === false) {
+            // dump($route, $uri->path(), __DIR__);
+            return;
+        }
+
+        $twig = $this->grav['twig'];
+        $twig->twig_vars['git_index'] = $this->git->statusSelect($path_filter=TRUE, $env='index', $select='MTDRCA');
     }
 
     public function showPublishingMenu() {
@@ -169,7 +207,7 @@ class GitSyncPlugin extends Plugin
             # 'hint' => $isInitialized ? 'Publish' : 'Publication',
             'class' => 'gitsync-sync',
             'location' => 'pages',
-            'route' => $isInitialized ? $this->route : 'plugins/git-sync',
+            'route' => $isInitialized ? $this->publish_route : 'plugins/git-sync',
             'icon' => 'fa-' . ($isInitialized ? $this->grav['plugins']->get('git-sync')->blueprints()->get('icon') : 'cog'),
         ];
 
@@ -222,7 +260,7 @@ class GitSyncPlugin extends Plugin
      */
     public function onTwigTemplatePaths()
     {
-        $this->grav['twig']->twig_paths[] = __DIR__ . '/templates';
+        $this->grav['twig']->twig_paths[] = __DIR__ . '/admin/templates';
     }
 
     /**

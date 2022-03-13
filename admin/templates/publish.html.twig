@@ -1,0 +1,54 @@
+{% extends 'partials/base.html.twig' %}
+
+{% if admin.route %}
+	{% set context = admin.page(true) %}
+{% endif %} {# CHECK THIS??? - what it does #}
+
+{% block titlebar %}
+	{#
+	<div class="button-bar">
+		<a class="button" href="{{ base_url }}"><i class="fa fa-reply"></i> {{ "PLUGIN_ADMIN.BACK"|tu }}</a>
+	</div>
+	#}
+	<h1><i class="fa fa-fw fa-file-text-o"></i> Review and Publish</h1>
+{% endblock %}
+
+{% block content %}
+<div class="page-data">
+{# TODO: check for a dirty repo first here #}
+{{ dump(git_index )}}
+{% if git_index is defined %}
+	{% if git_index is not empty %}
+	<p>These are the changes you have made that you can publish to the live site. {# TODO: more details here as functionality is added e.g. checkboxes for each file #}
+	</p>
+
+	<table class="git-status">
+		<thead>
+			<tr>
+				<th>Change</th>{# TODO: add checkbox #}
+				<th>Page</th>
+				<th>Notes</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for file in git_index %}
+			<tr>
+				<td>{{ file. index }}</td>
+				<td>{{ file.path }}</td>
+				{% set comments = [] %}
+				{% if file.orig_path is defined %}
+					{% set comments = comments|merge(["Renamed from {{ file.orig_path }}"]) %}
+				{% endif %}
+				<td>{{ comments|join('; ') }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	BUTTON HERE
+
+	{% endif %}
+{% endif %}
+
+</div>
+{% endblock %}
