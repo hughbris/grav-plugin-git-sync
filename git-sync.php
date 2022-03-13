@@ -122,7 +122,7 @@ class GitSyncPlugin extends Plugin
      * @param  string $payload The webhook request body
      * @return bool            Whether the signature is valid or not
      */
-    public function isGithubSignatureValid($secret, $signatureHeader, $payload)
+    private function isGithubSignatureValid($secret, $signatureHeader, $payload)
     {
         [$algorithm, $signature] = explode('=', $signatureHeader);
 
@@ -135,7 +135,7 @@ class GitSyncPlugin extends Plugin
      * @param  string $token token received from Gitlab webhook request
      * @return bool          whether or not secret and token match
      */
-    public function isGitlabTokenValid($secret, $token)
+    private function isGitlabTokenValid($secret, $token)
     {
         return $secret === $token;
     }
@@ -148,7 +148,7 @@ class GitSyncPlugin extends Plugin
      * @return boolean Whether the client secret matches the payload secret or
      * not
      */
-    public function isGiteaSecretValid($secret, $payload)
+    private function isGiteaSecretValid($secret, $payload)
     {
         $payload = json_decode($payload, true);
         if (!empty($payload) && isset($payload['secret'])) {
